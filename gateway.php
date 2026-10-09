@@ -15,6 +15,9 @@ if ($table_no === null || $total === null) {
     exit;
 }
 
+# Remember the table for success.php
+$_SESSION['table_no'] = $table_no;
+
 if (empty($_SESSION['cart'])) {
     echo "Your cart is empty.";
     exit;
@@ -52,7 +55,8 @@ foreach ($_SESSION['cart'] as $cart_item) {
 # Create Stripe checkout session with dynamic cart items
 $checkout_session = \Stripe\Checkout\Session::create([
     "mode" => "payment",
-    "success_url" => $base_url . "/success.php", #if success go to success.php
+    # {CHECKOUT_SESSION_ID} is filled in by Stripe, so success.php can confirm the payment
+    "success_url" => $base_url . "/success.php?session_id={CHECKOUT_SESSION_ID}", #if success go to success.php
     "cancel_url" => $base_url . "/cart.php?table_no=" . urlencode($table_no), #if cancelled go back to cart.php
     "locale" => "auto",
     "line_items" => $line_items
