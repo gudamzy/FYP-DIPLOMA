@@ -10,16 +10,22 @@
       font-family: Arial, sans-serif;
     }
 
-    /* Header (same dark theme as the Employee Panel) */
+    /* ===== Header (same dark theme as the Employee Panel) ===== */
     .header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 10px 20px;
-      background-color: #2c3e50;
       position: sticky;
       top: 0;
       z-index: 100;
+      background: #2c3e50;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.25);
+    }
+    .header-inner {
+      max-width: 1240px;
+      margin: 0 auto;
+      padding: 10px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
     }
 
     .logo-container {
@@ -27,200 +33,346 @@
       align-items: center;
       text-decoration: none;
     }
-
     .logo-container img {
-      height: 56px;
+      height: 58px;
+      width: 58px;
+      object-fit: contain;
       background: #fff;
       border-radius: 50%;
       padding: 3px;
-      margin-right: 12px;
+      box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.15);
+      transition: transform 0.3s;
+    }
+    .logo-container:hover img {
+      transform: rotate(-8deg) scale(1.05);
     }
 
-    .logo-container .logo-text {
-      font-size: 1.6rem;
-      font-weight: bold;
-      color: #fff;
-    }
-
+    /* ===== Navigation ===== */
     .nav-links {
       display: flex;
       align-items: center;
-      gap: 6px;
+      gap: 4px;
       list-style: none;
       margin: 0;
       padding: 0;
     }
-
-    .nav-links a {
-      text-decoration: none;
-      color: #fff;
-      font-size: 1.05rem;
-      padding: 10px 18px;
-      border-radius: 5px;
-      transition: background-color 0.3s;
-      display: block;
-    }
-
-    .nav-links a:hover {
-      background-color: #34495e;
-    }
-
-    .nav-links .dropdown {
+    .nav-links > li {
       position: relative;
     }
-
-    .nav-links .dropdown:hover .dropdown-menu {
+    .nav-links > li > a {
+      position: relative;
       display: block;
+      color: #ecf0f1;
+      text-decoration: none;
+      font-size: 0.98rem;
+      font-weight: 600;
+      letter-spacing: 1px;
+      padding: 12px 18px;
+      border-radius: 6px;
+      transition: background-color 0.3s, color 0.3s;
+    }
+    .nav-links > li > a::after {
+      content: "";
+      position: absolute;
+      left: 18px;
+      right: 18px;
+      bottom: 6px;
+      height: 2px;
+      background: #28a745;
+      border-radius: 2px;
+      transform: scaleX(0);
+      transition: transform 0.3s;
+    }
+    .nav-links > li > a:hover {
+      background: #34495e;
+      color: #fff;
+    }
+    .nav-links > li > a:hover::after,
+    .nav-links > li > a.active::after {
+      transform: scaleX(1);
+    }
+    .nav-links > li > a.active {
+      color: #fff;
+    }
+
+    .caret {
+      display: inline-block;
+      margin-left: 6px;
+      font-size: 0.7rem;
+      transition: transform 0.3s;
+    }
+    .dropdown:hover .caret,
+    .dropdown.open .caret {
+      transform: rotate(180deg);
     }
 
     .dropdown-menu {
-      display: none;
       position: absolute;
-      top: 100%;
+      top: calc(100% + 8px);
       left: 0;
-      min-width: 170px;
-      background-color: #ecf0f1;
-      border-radius: 5px;
-      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
-      overflow: hidden;
+      min-width: 200px;
+      background: #fff;
+      border-radius: 10px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.18);
+      padding: 8px;
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(-6px);
+      transition: opacity 0.25s, transform 0.25s, visibility 0.25s;
     }
-
+    .dropdown-menu::before {
+      content: "";
+      position: absolute;
+      top: -14px;
+      left: 0;
+      right: 0;
+      height: 14px;
+    }
+    .dropdown:hover .dropdown-menu,
+    .dropdown.open .dropdown-menu {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(0);
+    }
     .dropdown-menu a {
+      display: flex;
+      align-items: center;
+      gap: 10px;
       color: #2c3e50;
-      border-radius: 0;
-      border-bottom: 1px solid #ddd;
-    }
-
-    .dropdown-menu a:hover {
-      background-color: #bdc3c7;
-    }
-
-    .get-started {
-      color: #fff;
-      border: 2px solid #fff;
-      padding: 9px 22px;
       text-decoration: none;
-      font-size: 1rem;
+      padding: 11px 14px;
+      border-radius: 6px;
+      font-size: 0.95rem;
+      transition: background-color 0.2s;
+    }
+    .dropdown-menu a:hover {
+      background: #e3f2fd;
+    }
+    .dropdown-menu .icon {
+      width: 30px;
+      height: 30px;
+      border-radius: 8px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.95rem;
+    }
+    .icon.green  { background: #e8f5e9; }
+    .icon.orange { background: #fff3e0; }
+
+    /* ===== Right side ===== */
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .get-started {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: #28a745;
+      color: #fff;
+      padding: 11px 22px;
+      text-decoration: none;
+      font-size: 0.98rem;
       font-weight: bold;
       border-radius: 25px;
-      transition: all 0.3s;
+      box-shadow: 0 4px 10px rgba(40, 167, 69, 0.35);
+      transition: background 0.3s, transform 0.3s;
     }
-
     .get-started:hover {
-      background: #fff;
-      color: #2c3e50;
+      background: #218838;
+      transform: translateY(-2px);
     }
 
-    /* Contact Us modal */
+    .menu-toggle {
+      display: none;
+      background: none;
+      border: 2px solid rgba(255, 255, 255, 0.4);
+      color: #fff;
+      font-size: 1.3rem;
+      width: 44px;
+      height: 44px;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    /* ===== Contact Us modal ===== */
     .modal {
       display: none;
       position: fixed;
       inset: 0;
-      background-color: rgba(0, 0, 0, 0.5);
+      background: rgba(20, 30, 40, 0.6);
       justify-content: center;
       align-items: center;
       z-index: 200;
+      padding: 20px;
     }
-
     .modal-content {
-      background-color: #fff;
-      padding: 30px;
-      border-radius: 10px;
-      text-align: center;
-      width: 90%;
-      max-width: 400px;
+      background: #fff;
+      border-radius: 14px;
+      width: 100%;
+      max-width: 420px;
+      overflow: hidden;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
       position: relative;
+      text-align: center;
     }
-
-    .modal-content h2 {
-      color: #2c3e50;
-      margin-top: 0;
+    .modal-head {
+      background: #2c3e50;
+      color: #fff;
+      padding: 24px 20px 20px;
     }
-
+    .modal-head h2 {
+      margin: 0 0 6px;
+      font-size: 1.5rem;
+    }
+    .contact-info {
+      margin: 0;
+      color: #dfe6ec;
+      font-size: 0.95rem;
+    }
     .close {
       position: absolute;
       top: 10px;
-      right: 15px;
-      font-size: 22px;
+      right: 14px;
+      font-size: 26px;
+      color: #fff;
       cursor: pointer;
+      line-height: 1;
     }
-
-    .contact-info {
-      font-size: 16px;
-      color: #333;
-    }
-
     .contact-list {
-      list-style-type: none;
-      padding: 0;
-      font-size: 17px;
-      color: #333;
+      list-style: none;
+      margin: 0;
+      padding: 18px 20px 6px;
     }
-
     .contact-list li {
       margin-bottom: 10px;
     }
-
+    .contact-list a {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #e3f2fd;
+      color: #2c3e50;
+      text-decoration: none;
+      padding: 13px 16px;
+      border-radius: 10px;
+      font-size: 1rem;
+      font-weight: bold;
+      transition: background 0.2s;
+    }
+    .contact-list a:hover {
+      background: #d0e7fb;
+    }
+    .contact-list a span {
+      font-weight: normal;
+      font-size: 0.85rem;
+      color: #007bff;
+    }
     .start-order {
-      background-color: #2c3e50;
+      background: #2c3e50;
       border: none;
       color: #fff;
-      padding: 10px 24px;
+      padding: 11px 30px;
       border-radius: 8px;
       cursor: pointer;
-      margin-top: 10px;
+      font-size: 0.95rem;
+      margin: 6px 0 22px;
     }
-
     .start-order:hover {
-      background-color: #34495e;
+      background: #34495e;
     }
 
-    @media (max-width: 768px) {
-      .header {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 8px;
+    /* ===== Mobile ===== */
+    @media (max-width: 860px) {
+      .menu-toggle {
+        display: block;
+      }
+      .header-inner {
+        flex-wrap: wrap;
+      }
+      .header nav {
+        order: 3;
+        width: 100%;
+        display: none;
+      }
+      .header.nav-open nav {
+        display: block;
       }
       .nav-links {
-        flex-wrap: wrap;
+        flex-direction: column;
+        align-items: stretch;
+        padding: 6px 0 10px;
+      }
+      .nav-links > li > a::after {
+        display: none;
+      }
+      .nav-links > li > a.active {
+        background: #34495e;
+      }
+      .dropdown-menu {
+        position: static;
+        opacity: 1;
+        visibility: visible;
+        transform: none;
+        display: none;
+        box-shadow: none;
+        margin: 4px 0 6px;
+      }
+      .dropdown:hover .dropdown-menu {
+        display: none;
+      }
+      .dropdown.open .dropdown-menu {
+        display: block;
+      }
+      .get-started {
+        padding: 10px 16px;
       }
     }
   </style>
 </head>
 <body>
-  <header class="header">
-    <a class="logo-container" href="cust.php">
-      <img src="image/Logo.png" alt="Restaurant Logo">
-    </a>
-    <nav>
-      <ul class="nav-links">
-        <li><a href="cust.php">HOME</a></li>
-        <li><a href="mainpage.html">ROLE</a></li>
-        <li><a href="cust_menu.php">MENU</a></li>
-        <li class="dropdown">
-          <a href="#">ORDER</a>
-          <div class="dropdown-menu">
-            <a href="cust_table.php">Proceed Order</a>
-            <a href="success.php">View Order</a>
-          </div>
-        </li>
-      </ul>
-    </nav>
-    <div class="header-right">
-      <a href="#" class="get-started" onclick="openContactModal(); return false;">Contact Us</a>
+  <header class="header" id="siteHeader">
+    <div class="header-inner">
+      <a class="logo-container" href="cust.php">
+        <img src="image/Logo.png" alt="Restaurant Logo">
+      </a>
+
+      <nav>
+        <ul class="nav-links">
+          <li><a href="cust.php">HOME</a></li>
+          <li><a href="mainpage.html">ROLE</a></li>
+          <li><a href="cust_menu.php">MENU</a></li>
+          <li class="dropdown" id="orderDropdown">
+            <a href="#" onclick="toggleDropdown(event)">ORDER<span class="caret">▼</span></a>
+            <div class="dropdown-menu">
+              <a href="cust_table.php"><span class="icon green">🍽️</span>Proceed Order</a>
+              <a href="success.php"><span class="icon orange">🧾</span>View Order</a>
+            </div>
+          </li>
+        </ul>
+      </nav>
+
+      <div class="header-right">
+        <a href="#" class="get-started" onclick="openContactModal(); return false;">📞 Contact Us</a>
+        <button class="menu-toggle" onclick="toggleMenu()" aria-label="Open menu">☰</button>
+      </div>
     </div>
   </header>
 
   <!-- Contact Us Modal -->
-  <div class="modal" id="contactModal">
+  <div class="modal" id="contactModal" onclick="if (event.target === this) closeContactModal()">
     <div class="modal-content">
       <span class="close" onclick="closeContactModal()">&times;</span>
-      <h2>Contact Us</h2>
-      <p class="contact-info">You can contact us at the following numbers:</p>
+      <div class="modal-head">
+        <h2>Contact Us</h2>
+        <p class="contact-info">You can contact us at the following numbers:</p>
+      </div>
       <ul class="contact-list">
-        <li>+60 01154249272 - Manager</li>
-        <li>+60 0196785790 - Manager</li>
-        <li>+60 0183517678 - Manager</li>
+        <li><a href="tel:+601154249272">+60 01154249272 <span>Manager</span></a></li>
+        <li><a href="tel:+60196785790">+60 0196785790 <span>Manager</span></a></li>
+        <li><a href="tel:+60183517678">+60 0183517678 <span>Manager</span></a></li>
       </ul>
       <button class="start-order" onclick="closeContactModal()">Close</button>
     </div>
@@ -234,6 +386,35 @@
     function closeContactModal() {
       document.getElementById('contactModal').style.display = 'none';
     }
+
+    function toggleMenu() {
+      document.getElementById('siteHeader').classList.toggle('nav-open');
+    }
+
+    function toggleDropdown(e) {
+      e.preventDefault();
+      document.getElementById('orderDropdown').classList.toggle('open');
+    }
+
+    // Highlight the link for the page currently open
+    (function () {
+      var page = location.pathname.split('/').pop() || 'cust.php';
+      var orderPages = ['cust_table.php', 'cust_order.php', 'cart.php', 'success.php'];
+      document.querySelectorAll('.nav-links > li > a').forEach(function (a) {
+        var href = a.getAttribute('href');
+        if (href === page || (a.parentElement.id === 'orderDropdown' && orderPages.indexOf(page) !== -1)) {
+          a.classList.add('active');
+        }
+      });
+    })();
+
+    // Close the dropdown when clicking anywhere else
+    document.addEventListener('click', function (e) {
+      var dd = document.getElementById('orderDropdown');
+      if (dd && !dd.contains(e.target)) {
+        dd.classList.remove('open');
+      }
+    });
   </script>
 </body>
 </html>
