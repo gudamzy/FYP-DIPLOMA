@@ -3,21 +3,20 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Header</title>
+  <title>Restaurant</title>
   <style>
     body {
       margin: 0;
       font-family: Arial, sans-serif;
     }
 
-    /* Header Styles */
+    /* Header (same dark theme as the Employee Panel) */
     .header {
       display: flex;
       justify-content: space-between;
       align-items: center;
       padding: 10px 20px;
-      background-color: #fff;
-      border-bottom: 1px solid #ddd;
+      background-color: #2c3e50;
       position: sticky;
       top: 0;
       z-index: 100;
@@ -26,42 +25,47 @@
     .logo-container {
       display: flex;
       align-items: center;
+      text-decoration: none;
     }
 
     .logo-container img {
-      height: 50px;
-      margin-right: 10px;
+      height: 56px;
+      background: #fff;
+      border-radius: 50%;
+      padding: 3px;
+      margin-right: 12px;
     }
 
     .logo-container .logo-text {
-      font-size: 18px;
+      font-size: 1.6rem;
       font-weight: bold;
-      color: #333;
-      line-height: 1.2;
+      color: #fff;
     }
 
     .nav-links {
       display: flex;
       align-items: center;
-      gap: 20px;
+      gap: 6px;
+      list-style: none;
+      margin: 0;
+      padding: 0;
     }
 
     .nav-links a {
       text-decoration: none;
-      color: #333;
-      font-size: 16px;
-      font-weight: 500;
-      padding: 10px;
+      color: #fff;
+      font-size: 1.05rem;
+      padding: 10px 18px;
       border-radius: 5px;
       transition: background-color 0.3s;
+      display: block;
     }
 
     .nav-links a:hover {
-      background-color: #f0f0f0;
+      background-color: #34495e;
     }
 
     .nav-links .dropdown {
-      cursor: pointer;
       position: relative;
     }
 
@@ -72,85 +76,84 @@
     .dropdown-menu {
       display: none;
       position: absolute;
-      top: 30px;
+      top: 100%;
       left: 0;
-      background-color: #fff;
-      border: 1px solid #ddd;
-      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+      min-width: 170px;
+      background-color: #ecf0f1;
+      border-radius: 5px;
+      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+      overflow: hidden;
     }
 
     .dropdown-menu a {
-      display: block;
-      padding: 5px 10px;
-      text-decoration: none;
-      color: #333;
+      color: #2c3e50;
+      border-radius: 0;
+      border-bottom: 1px solid #ddd;
     }
 
     .dropdown-menu a:hover {
-      background-color: #f0f0f0;
+      background-color: #bdc3c7;
     }
 
-    /* New Beautiful Button */
     .get-started {
-      background: linear-gradient(45deg, #ff5f6d, #ffc3a0);
       color: #fff;
-      padding: 12px 25px;
+      border: 2px solid #fff;
+      padding: 9px 22px;
       text-decoration: none;
-      font-size: 18px;
+      font-size: 1rem;
       font-weight: bold;
       border-radius: 25px;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-      transition: all 0.3s ease-in-out;
+      transition: all 0.3s;
     }
 
     .get-started:hover {
-      background: linear-gradient(45deg, #ff416c, #ff4b2b);
-      box-shadow: 0 8px 10px rgba(0, 0, 0, 0.2);
-      transform: translateY(-2px);
+      background: #fff;
+      color: #2c3e50;
     }
 
-    /* Modal Styles for Contact Us */
+    /* Contact Us modal */
     .modal {
       display: none;
       position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
+      inset: 0;
       background-color: rgba(0, 0, 0, 0.5);
       justify-content: center;
       align-items: center;
+      z-index: 200;
     }
 
     .modal-content {
       background-color: #fff;
       padding: 30px;
-      border-radius: 8px;
+      border-radius: 10px;
       text-align: center;
       width: 90%;
       max-width: 400px;
       position: relative;
     }
 
+    .modal-content h2 {
+      color: #2c3e50;
+      margin-top: 0;
+    }
+
     .close {
       position: absolute;
       top: 10px;
       right: 15px;
-      font-size: 20px;
+      font-size: 22px;
       cursor: pointer;
     }
 
     .contact-info {
-      font-size: 18px;
-      font-weight: bold;
+      font-size: 16px;
       color: #333;
-      margin-top: 20px;
     }
 
     .contact-list {
       list-style-type: none;
       padding: 0;
-      font-size: 18px;
+      font-size: 17px;
       color: #333;
     }
 
@@ -159,36 +162,41 @@
     }
 
     .start-order {
-      background-color: #44d9e6;
+      background-color: #2c3e50;
       border: none;
       color: #fff;
-      padding: 10px 20px;
+      padding: 10px 24px;
       border-radius: 8px;
       cursor: pointer;
-      margin-top: 20px;
+      margin-top: 10px;
     }
 
     .start-order:hover {
-      background-color: #3ab6c1;
+      background-color: #34495e;
+    }
+
+    @media (max-width: 768px) {
+      .header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+      }
+      .nav-links {
+        flex-wrap: wrap;
+      }
     }
   </style>
 </head>
 <body>
   <header class="header">
-    <div class="logo-container">
-      <img src="image/Logo.png" alt="UniKL Logo" style="height: 80px; > 
-      <div class="logo-text">
-        
-      </div>
-    </div>
+    <a class="logo-container" href="cust.php">
+      <img src="image/Logo.png" alt="Restaurant Logo">
+    </a>
     <nav>
       <ul class="nav-links">
-      
         <li><a href="cust.php">HOME</a></li>
-        <li><a href="mainpage.html">ROLE</a></li>  
-        <li class="dropdown">
-          <a href="cust_menu.php">MENU</a>
-        </li>
+        <li><a href="mainpage.html">ROLE</a></li>
+        <li><a href="cust_menu.php">MENU</a></li>
         <li class="dropdown">
           <a href="#">ORDER</a>
           <div class="dropdown-menu">
@@ -199,7 +207,7 @@
       </ul>
     </nav>
     <div class="header-right">
-      <a href="#" class="get-started" onclick="openContactModal()">Contact Us</a>
+      <a href="#" class="get-started" onclick="openContactModal(); return false;">Contact Us</a>
     </div>
   </header>
 
