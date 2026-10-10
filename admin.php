@@ -1,4 +1,6 @@
 <?php
+require_once __DIR__ . '/includes/security.php';
+require_admin(); # login check before anything is printed
 $page_title = 'ADMIN';
 include ('./includes/header_admin.html');
 ?>

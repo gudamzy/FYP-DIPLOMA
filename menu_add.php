@@ -1,45 +1,57 @@
 <?php 
+require_once __DIR__ . '/includes/security.php';
+require_admin(); # only admins can add menu items
 
 $page_title = 'MENU ADD';
 include ('./includes/header_admin.html'); #header
 
 # Check if the form has been submitted.
 if (isset($_POST['submit'])) {
+    csrf_check();
 
     require_once ('mysqli.php'); # dbc connection.
     global $dbc;
 
     $errors = array(); 
 
-    # Check for menu and price only (description can be empty).
-    if (empty($_POST['menu']) || empty($_POST['price'])) {
-        $errors[] = 'You forgot to enter menu and price.';
-    }
-    
+    $menu_in     = trim($_POST['menu'] ?? '');
+    $price_in    = trim($_POST['price'] ?? '');
     # description can be empty
-    $description = !empty($_POST['description']) ? $_POST['description'] : '';
+    $description = trim($_POST['description'] ?? '');
+
+    # Check for menu and price only (description can be empty).
+    if ($menu_in === '' || $price_in === '') {
+        $errors[] = 'You forgot to enter menu and price.';
+    } elseif (!is_numeric($price_in) || (float)$price_in < 0) {
+        $errors[] = 'Price must be a number, for example 9.50.';
+    }
 
     if (empty($errors)) { #if no error
+        $price = round((float)$price_in, 2);
 
         # Check for previous registration.
-        $query = "SELECT menu, description, price FROM rms_menu WHERE menu='{$_POST['menu']}' AND description='{$description}' AND price='{$_POST['price']}'";
-        $result = @mysqli_query ($dbc,$query); # Run the dbc,query.
-        if (mysqli_num_rows($result) == 0) {
+        $stmt = mysqli_prepare($dbc, "SELECT id FROM rms_menu WHERE menu = ? AND description = ? AND price = ?");
+        mysqli_stmt_bind_param($stmt, 'ssd', $menu_in, $description, $price);
+        mysqli_stmt_execute($stmt);
+        mysqli_stmt_store_result($stmt);
+        $exists = mysqli_stmt_num_rows($stmt) > 0;
+        mysqli_stmt_close($stmt);
 
-            $query = "INSERT INTO rms_menu (menu, description, price) VALUES ('{$_POST['menu']}', '{$description}', '{$_POST['price']}')";        
-            $result = @mysqli_query ($dbc,$query); # Run the dbc,query.
+        if (!$exists) {
+            $stmt = mysqli_prepare($dbc, "INSERT INTO rms_menu (menu, description, price) VALUES (?, ?, ?)");
+            mysqli_stmt_bind_param($stmt, 'ssd', $menu_in, $description, $price);
+            $ok = mysqli_stmt_execute($stmt);
+            mysqli_stmt_close($stmt);
 
-            if (mysqli_affected_rows($dbc) > 0) { 
+            if ($ok) { 
                 # Print message.
                 echo '<h1 id="mainhead">Thank you!</h1>
-                    <p>'. $_POST['menu']. ($description ? ', ' . $description : '') . ', ' . $_POST['price'] . ' has been added. </p><p><br /></p>';    
-
+                    <p>'. e($menu_in) . ($description !== '' ? ', ' . e($description) : '') . ', RM' . e(number_format($price, 2)) . ' has been added. </p><p><br /></p>';
                 include ('./includes/footer.html'); 
                 exit();
             } else {
                 echo '<h1 id="mainhead">System Error</h1>
-                <p class="error">You could not be registered due to a system error. We apologize for any inconvenience.</p>'; // Public message.
-                echo '<p>' . mysqli_error($dbc)  . '<br /><br />Query: ' . $query . '</p>'; // Debugging message.
+                <p class="error">The menu could not be added due to a system error. Please try again.</p>';
                 include ('./includes/footer.html'); 
                 exit();
             }
@@ -47,15 +59,14 @@ if (isset($_POST['submit'])) {
             echo '<h1 id="mainhead">Error!</h1>
             <p class="error">This menu already exists.</p>';
         }
-    } else { # Report the errors.
 
+    } else { # Report the errors.
         echo '<h1 id="mainhead">Error!</h1>
         <p class="error">The following error(s) occurred:<br />';
         foreach ($errors as $msg) { # Print each error.
-            echo " - $msg<br />\n";
+            echo ' - ' . e($msg) . "<br />\n";
         }
         echo '</p><p>Please try again.</p><p><br /></p>';
-
     }
 
     mysqli_close($dbc); # Close the database connection.
@@ -64,19 +75,20 @@ if (isset($_POST['submit'])) {
 
 <h2 class="form-header">Add New Menu</h2>
 <form action="menu_add.php" method="post" class="form-container">
+    <?php echo csrf_field(); ?>
     <div class="form-group">
         <label for="menu">New Menu:</label>
-        <input type="text" id="menu" name="menu" size="15" maxlength="15" value="<?php if (isset($_POST['menu'])) echo $_POST['menu']; ?>" class="form-control" />
+        <input type="text" id="menu" name="menu" size="15" maxlength="60" value="<?php if (isset($_POST['menu'])) echo e($_POST['menu']); ?>" class="form-control" />
     </div>
     
     <div class="form-group">
         <label for="description">Description:</label>
-        <input type="text" id="description" name="description" value="<?php if (isset($_POST['description'])) echo $_POST['description']; ?>" class="form-control" />
+        <input type="text" id="description" name="description" value="<?php if (isset($_POST['description'])) echo e($_POST['description']); ?>" class="form-control" />
     </div>
     
     <div class="form-group">
         <label for="price">Price:</label>
-        <input type="number" id="price" name="price" value="<?php if (isset($_POST['price'])) echo $_POST['price']; ?>" class="form-control" step="0.01" />
+        <input type="number" id="price" name="price" value="<?php if (isset($_POST['price'])) echo e($_POST['price']); ?>" class="form-control" step="0.01" />
     </div>
     
     <div class="form-group">

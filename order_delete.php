@@ -1,10 +1,14 @@
-<?php 
+<?php
+require_once __DIR__ . '/includes/security.php';
+require_staff(); # employees and admins only
+ 
 
 $page_title = 'Delete Order';
 include ('./includes/header_employ.html'); # header
 
 # Check if the form has been submitted.
 if (isset($_POST['submit'])) {
+    csrf_check();
 
     require_once ('mysqli.php'); # dbc connection
     global $dbc;
@@ -15,16 +19,23 @@ if (isset($_POST['submit'])) {
     if (empty($_POST['id'])) {
         $errors[] = 'You forgot to select an order.';
     } else {
-        $order_id = $_POST['id'];
+        $order_id = (int)$_POST['id'];
     }
 
     if (empty($errors)) { # if no error
 
         # Delete the order from the database.
-        $query = "DELETE FROM rms_order WHERE id=$order_id";
-        $result = @mysqli_query($dbc, $query); # Run the dbc,query.
+        $stmt = mysqli_prepare($dbc, "DELETE FROM rms_order WHERE id = ?");
+        mysqli_stmt_bind_param($stmt, 'i', $order_id);
+        try {
+            mysqli_stmt_execute($stmt);
+            $deleted = mysqli_stmt_affected_rows($stmt);
+        } catch (mysqli_sql_exception $ex) {
+            $deleted = 0; # e.g. the record is still linked to other data
+        }
+        mysqli_stmt_close($stmt);
 
-        if (mysqli_affected_rows($dbc) > 0) { 
+        if ($deleted > 0) { 
 
             # Print a message.
             echo '<h1 id="mainhead">Order Deleted</h1>
@@ -33,7 +44,6 @@ if (isset($_POST['submit'])) {
         } else { # If error occurs
             echo '<h1 id="mainhead">System Error</h1>
                   <p class="error">The order could not be deleted due to a system error. We apologize for any inconvenience.</p>'; 
-            echo '<p>' . mysqli_error($dbc) . '<br /><br />Query: ' . $query . '</p>'; 
         }
 
         mysqli_close($dbc); # Close the database connection.
@@ -50,7 +60,6 @@ if (isset($_POST['submit'])) {
 
     } 
 
-    mysqli_close($dbc); # Close the database connection.
 
 } 
 
@@ -64,13 +73,13 @@ $result = @mysqli_query($dbc, $query);
 
 if (mysqli_num_rows($result) > 0) {
     echo '<h2 class="form-header">Delete Order</h2>
-          <form action="order_delete.php" method="post" class="form-container">
+          <form action="order_delete.php" method="post" class="form-container">' . csrf_field() . '
           <div class="form-group">
           <label for="order">Order:</label>
           <select name="id" id="order" class="form-control">';
 
     while ($row = mysqli_fetch_array($result, MYSQLI_ASSOC)) {
-        echo '<option value="' . $row['id'] . '">' . 'Table ' . $row['tables_no'] . ' - ' . $row['orders'] . ' (' . $row['time'] . ')</option>';
+        echo '<option value="' . (int)$row['id'] . '">' . 'Table ' . e($row['tables_no']) . ' - ' . e($row['orders']) . ' (' . e($row['time']) . ')</option>';
     }
 
     echo '</select></div>

@@ -1,9 +1,40 @@
 <?php
-$page_title = 'TO MARK ORDERS AS READY';
-include('./includes/header_employ.html'); #header
+require_once __DIR__ . '/includes/security.php';
+require_staff(); # login check before anything is printed
 
 require_once('mysqli.php'); #dbc connection
 global $dbc;
+
+# Handle the form FIRST, then reload the page so the list is up to date
+# and refreshing the browser does not send the form again.
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submitOrder'])) {
+    csrf_check();
+
+    $order_id = (int)($_POST['order_id'] ?? 0);
+    $ready    = $_POST['ready'] ?? '';
+
+    if ($order_id <= 0 || !in_array($ready, ['Y', 'N'], true)) {
+        $_SESSION['order_ready_flash'] = 'invalid';
+    } else {
+        $status = $ready === 'Y' ? 'Completed' : 'Pending';
+        try {
+            $stmt = mysqli_prepare($dbc, "UPDATE rms_order SET status = ? WHERE id = ?");
+            mysqli_stmt_bind_param($stmt, 'si', $status, $order_id);
+            $ok = mysqli_stmt_execute($stmt);
+            mysqli_stmt_close($stmt);
+        } catch (mysqli_sql_exception $ex) {
+            $ok = false;
+        }
+        $_SESSION['order_ready_flash'] = $ok ? 'ok' : 'error';
+    }
+    header('Location: order_ready.php');
+    exit;
+}
+$flash = $_SESSION['order_ready_flash'] ?? '';
+unset($_SESSION['order_ready_flash']);
+
+$page_title = 'TO MARK ORDERS AS READY';
+include('./includes/header_employ.html'); #header
 
 echo "<h1>TO MARK ORDERS AS READY</h1>\n";
 
@@ -12,7 +43,9 @@ $query = "SELECT id, tables_no, orders, time, status FROM rms_order WHERE status
 $result = mysqli_query($dbc, $query);
 
 if (!$result) {
-    die('<p class="error" style="color: #dc3545;">Error fetching orders: ' . mysqli_error($dbc) . '</p>');
+    echo '<p class="error" style="color: #dc3545;">Could not load the orders. Please try again later.</p>';
+    include('./includes/footer.html');
+    exit;
 }
 
 if (mysqli_num_rows($result) > 0) {
@@ -26,7 +59,7 @@ if (mysqli_num_rows($result) > 0) {
     # Fetch and print all the records.
     $orders = [];
     while ($row = mysqli_fetch_array($result, MYSQLI_ASSOC)) {
-        echo '<tr><td>' . $row['tables_no'] . '</td><td>' . $row['orders'] . '</td><td>' . $row['time'] . '</td><td>' . $row['status'] . '</td></tr>';
+        echo '<tr><td>' . e($row['tables_no']) . '</td><td>' . e($row['orders']) . '</td><td>' . e($row['time']) . '</td><td>' . e($row['status']) . '</td></tr>';
         $orders[] = $row;
     }
     echo '</table>';
@@ -35,12 +68,13 @@ if (mysqli_num_rows($result) > 0) {
     # Display the form for marking as ready
     echo "<h3>MARK ORDER AS READY</h3>\n";
     echo '<form action="" method="post" style="width: 60%; margin: 0 auto; padding: 20px; border: 1px solid #ddd; background-color: #f9f9f9;">';
+    echo csrf_field();
 
     echo '<p><label for="order_id">Select order to mark as ready:</label>';
     echo '<select name="order_id" id="order_id" style="width: 100%; padding: 10px; margin-top: 5px;">';
 
     foreach ($orders as $order) {
-        echo '<option value="' . $order['id'] . '">' . 'Table ' . $order['tables_no'] . ' - ' . $order['orders'] . ' (' . $order['time'] . ')</option>';
+        echo '<option value="' . e($order['id']) . '">' . 'Table ' . e($order['tables_no']) . ' - ' . e($order['orders']) . ' (' . e($order['time']) . ')</option>';
     }
 
     echo '</select></p>';
@@ -56,28 +90,13 @@ if (mysqli_num_rows($result) > 0) {
     echo '<p class="error" style="color: #dc3545; text-align: center;">There are currently NO PENDING ORDERS.</p>';
 }
 
-# form submission
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submitOrder'])) {
-    $order_id = $_POST['order_id'];
-    $ready = $_POST['ready'];
-
-    # inputs part
-    if (empty($order_id) || !in_array($ready, ['Y', 'N'])) {
-        echo '<p class="error" style="color: #dc3545;">Invalid input. Please try again.</p>';
-    } else {
-        $status = $ready === 'Y' ? 'Completed' : 'Pending';
-
-        # Update the order status 
-        $stmt = $dbc->prepare("UPDATE rms_order SET status = ? WHERE id = ?");
-        $stmt->bind_param("si", $status, $order_id);
-        if ($stmt->execute()) {
-            echo '<p>Order status updated successfully.</p>';
-        } else {
-            echo '<p class="error" style="color: #dc3545;">System error. Could not update the order status.</p>';
-            echo '<p>' . $dbc->error . '</p>';
-        }
-        $stmt->close();
-    }
+# Result message from the last submit (shown in the same place as before)
+if ($flash === 'ok') {
+    echo '<p>Order status updated successfully.</p>';
+} elseif ($flash === 'invalid') {
+    echo '<p class="error" style="color: #dc3545;">Invalid input. Please try again.</p>';
+} elseif ($flash === 'error') {
+    echo '<p class="error" style="color: #dc3545;">System error. Could not update the order status.</p>';
 }
 
 mysqli_close($dbc); # Close the database connection.

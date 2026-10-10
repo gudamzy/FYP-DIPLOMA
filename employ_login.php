@@ -1,40 +1,43 @@
 <?php
+require_once __DIR__ . '/includes/security.php'; # safe session + helpers
+require_once "mysqli.php";  #dbc connection
 
-require_once "mysqli.php";  // Ensure that this file properly initializes the $dbc connection
-
-// Start session
-session_start();
-
-// Initialize a variable to hold error messages
+# hold error messages
 $error = "";
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    # Get form inputs
-    $username = mysqli_real_escape_string($dbc, $_POST['username']);
-    $password = mysqli_real_escape_string($dbc, $_POST['password']);
+    csrf_check();
 
-    # Query the database for the entered username
-    $query = "SELECT employee_id, password FROM rms_employee WHERE username = '$username'";
-    $result = mysqli_query($dbc, $query); #run the dbc,query
+    if (login_blocked('employee')) {
+        $error = "Too many failed attempts. Please wait 5 minutes and try again.";
+    } else {
+        # Get form inputs (no escaping needed: we use a prepared statement)
+        $username = trim($_POST['username'] ?? '');
+        $password = (string)($_POST['password'] ?? '');
 
-    if ($result && mysqli_num_rows($result) == 1) {
-        # Fetch user details
-        $row = mysqli_fetch_assoc($result);
+        # Look up the user safely
+        $stmt = mysqli_prepare($dbc, "SELECT employee_id, password FROM rms_employee WHERE username = ? LIMIT 1");
+        mysqli_stmt_bind_param($stmt, 's', $username);
+        mysqli_stmt_execute($stmt);
+        mysqli_stmt_bind_result($stmt, $found_id, $found_password);
+        $row = mysqli_stmt_fetch($stmt) ? ['employee_id' => $found_id, 'password' => $found_password] : null;
+        mysqli_stmt_close($stmt);
 
-        # Verify the password using password_verify() for hashed passwords
-        if (password_verify($password, $row['password'])) {
+        if ($row && verify_and_upgrade_password($dbc, 'rms_employee', 'employee_id', $row['employee_id'], $password, $row['password'])) {
+            login_succeeded('employee');
+            login_session_refresh();
             # Save user information in session
-            $_SESSION['employee_id'] = $row['employee_id'];  
+            $_SESSION['employee_id'] = $row['employee_id'];
             $_SESSION['username'] = $username;
 
             # Redirect location
             header("Location: employ.php");
             exit();
-        } else {
-            $error = "Invalid password.";
         }
-    } else {
-        $error = "Invalid username or user does not exist.";
+
+        login_failed('employee');
+        # Same message for wrong username or wrong password (does not reveal which usernames exist)
+        $error = "Invalid username or password.";
     }
 }
 
@@ -133,9 +136,10 @@ mysqli_close($dbc);
     <h2>Employee Login</h2>
 
     <!-- Display error messages -->
-    <?php if (!empty($error)) echo "<p class='error'>$error</p>"; ?>
+    <?php if (!empty($error)) echo "<p class='error'>" . e($error) . "</p>"; ?>
 
     <form action="employ_login.php" method="post">
+        <?php echo csrf_field(); ?>
         <label for="username">Username:</label>
         <input type="text" name="username" id="username" placeholder="Enter your username" required>
         

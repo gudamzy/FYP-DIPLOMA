@@ -1,5 +1,5 @@
 <?php
-session_start();
+require_once __DIR__ . '/includes/security.php'; # safe session settings
 
 # How many tables the restaurant has (change this number if needed)
 $total_tables = 12;

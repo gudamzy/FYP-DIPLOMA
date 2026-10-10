@@ -1,9 +1,16 @@
 <?php
-session_start();
+require_once __DIR__ . '/includes/security.php'; # safe session settings
 require_once 'mysqli.php';  #dbc connection
+require_once './includes/menu_image.php'; # menu photos
 
 # Get the table number from the form submission or URL
 $table_no = $_POST['table_no'] ?? $_GET['table_no'] ?? null;
+
+# Only real table numbers (1-12) are accepted
+$table_no = filter_var($table_no, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1, 'max_range' => 12]]);
+if ($table_no === false) {
+    $table_no = null;
+}
 
 if ($table_no === null || $table_no === '') {
     echo "Table number is missing.";
@@ -17,15 +24,31 @@ if (!isset($_SESSION['cart'])) {
 
 # Add item to cart
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['add_to_cart'])) {
-    $menu_id    = $_POST['menu_id'];
-    $menu_name  = $_POST['menu_name'];
-    $menu_price = $_POST['menu_price'];
+    # Name and price are read from the database, never from the form,
+    # so nobody can change the price in the browser.
+    $menu_id = (int)($_POST['menu_id'] ?? 0);
+    $menu_name = null;
+    $menu_price = null;
+    $stmt = mysqli_prepare($dbc, "SELECT menu, price FROM rms_menu WHERE id = ? LIMIT 1");
+    mysqli_stmt_bind_param($stmt, 'i', $menu_id);
+    mysqli_stmt_execute($stmt);
+    mysqli_stmt_bind_result($stmt, $menu_name, $menu_price);
+    $menu_found = mysqli_stmt_fetch($stmt);
+    mysqli_stmt_close($stmt);
+
+    if (!$menu_found) {
+        header('Location: cust_order.php?table_no=' . urlencode($table_no));
+        exit;
+    }
+    $menu_price = (float)$menu_price;
 
     # Check if the item already exists in the cart
     $found = false;
     foreach ($_SESSION['cart'] as &$cart_item) {
         if ($cart_item['menu_id'] == $menu_id) {
-            $cart_item['quantity']++;
+            if ($cart_item['quantity'] < 50) {
+                $cart_item['quantity']++;
+            }
             $found = true;
             break;
         }
@@ -43,7 +66,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['add_to_cart'])) {
     }
 
     # Redirect so refreshing the page does not add the item again
-    header('Location: cust_order.php?table_no=' . urlencode($table_no) . '&added=' . urlencode($menu_name));
+    $_SESSION['just_added'] = $menu_name; # shown once in the "added to cart" message
+    header('Location: cust_order.php?table_no=' . urlencode($table_no) . '&added=1');
     exit;
 }
 
@@ -79,7 +103,8 @@ if ($result) {
     }
 }
 
-$added = $_GET['added'] ?? null;
+$added = isset($_GET['added']) ? ($_SESSION['just_added'] ?? null) : null;
+unset($_SESSION['just_added']);
 $t = htmlspecialchars($table_no);
 $cart_url = 'cart.php?table_no=' . urlencode($table_no);
 ?>
@@ -208,6 +233,38 @@ $cart_url = 'cart.php?table_no=' . urlencode($table_no);
             line-height: 1.5;
             color: #555;
         }
+        /* ===== Menu photo ===== */
+        .menu-card { padding: 0; overflow: hidden; }
+        .menu-photo {
+          position: relative;
+          height: 170px;
+          background: rgba(255, 255, 255, 0.55);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          overflow: hidden;
+        }
+        .menu-photo img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          display: block;
+          transition: transform 0.4s;
+        }
+        .menu-card:hover .menu-photo img { transform: scale(1.06); }
+        .menu-photo .ph {
+          display: none;
+          font-size: 3.4rem;
+          opacity: 0.55;
+        }
+        .menu-photo.noimg .ph { display: block; }
+        .menu-body {
+          flex: 1;
+          display: flex;
+          flex-direction: column;
+          justify-content: space-between;
+          padding: 18px 20px 20px;
+        }
         .card-foot {
             display: flex;
             justify-content: space-between;
@@ -299,6 +356,15 @@ $cart_url = 'cart.php?table_no=' . urlencode($table_no);
                         $showDesc = $desc !== '' && !in_array(strtoupper($desc), ['NASI GORENG', 'MINUMAN'], true);
                     ?>
                         <div class="menu-card">
+                            <?php $img = menu_image($row['menu']); ?>
+                            <div class="menu-photo<?php echo $img ? '' : ' noimg'; ?>">
+                              <?php if ($img): ?>
+                                <img src="<?php echo htmlspecialchars($img); ?>" alt="<?php echo htmlspecialchars($row['menu']); ?>" loading="lazy"
+                                     onerror="this.parentNode.classList.add('noimg'); this.remove();">
+                              <?php endif; ?>
+                              <span class="ph"><?php echo menu_placeholder_icon($category); ?></span>
+                            </div>
+                          <div class="menu-body">
                             <div>
                                 <h3><?php echo htmlspecialchars($row['menu']); ?></h3>
                                 <?php if ($showDesc): ?>
@@ -313,6 +379,7 @@ $cart_url = 'cart.php?table_no=' . urlencode($table_no);
                                 <span class="price">RM <?php echo number_format((float)$row['price'], 2); ?></span>
                                 <button type="submit" name="add_to_cart" class="add-btn">+ Add</button>
                             </form>
+                          </div>
                         </div>
                     <?php endforeach; ?>
                 </div>

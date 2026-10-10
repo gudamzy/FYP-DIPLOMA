@@ -2,6 +2,7 @@
 $page_title = 'RESTAURANT MENU';
 include('./includes/header_cust.html');
 require_once('mysqli.php'); #dbc connection
+require_once('./includes/menu_image.php'); # menu photos
 global $dbc;
 
 # Fetch menu
@@ -108,6 +109,38 @@ foreach ($categories as $c) {
     line-height: 1.5;
     color: #555;
   }
+  /* ===== Menu photo ===== */
+  .menu-card { padding: 0; overflow: hidden; }
+  .menu-photo {
+    position: relative;
+    height: 170px;
+    background: rgba(255, 255, 255, 0.55);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+  .menu-photo img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: transform 0.4s;
+  }
+  .menu-card:hover .menu-photo img { transform: scale(1.06); }
+  .menu-photo .ph {
+    display: none;
+    font-size: 3.4rem;
+    opacity: 0.55;
+  }
+  .menu-photo.noimg .ph { display: block; }
+  .menu-body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 18px 20px 20px;
+  }
   .menu-card .price {
     font-size: 1.4rem;
     font-weight: bold;
@@ -133,6 +166,13 @@ foreach ($categories as $c) {
     transition: background 0.3s;
   }
   .menu-cta a:hover { background: #34495e; }
+  .photo-note {
+    text-align: center;
+    margin: 18px 0 0;
+    font-size: 0.8rem;
+    color: #999;
+  }
+  .photo-note a { color: #999; }
   .menu-empty {
     text-align: center;
     color: #dc3545;
@@ -165,13 +205,23 @@ foreach ($categories as $c) {
             $showDesc = $desc !== '' && !in_array(strtoupper($desc), ['NASI GORENG', 'MINUMAN'], true);
         ?>
           <div class="menu-card">
-            <div>
-              <h3><?php echo htmlspecialchars($item['menu']); ?></h3>
-              <?php if ($showDesc): ?>
-                <p class="desc"><?php echo htmlspecialchars($desc); ?></p>
+            <?php $img = menu_image($item['menu']); ?>
+            <div class="menu-photo<?php echo $img ? '' : ' noimg'; ?>">
+              <?php if ($img): ?>
+                <img src="<?php echo htmlspecialchars($img); ?>" alt="<?php echo htmlspecialchars($item['menu']); ?>" loading="lazy"
+                     onerror="this.parentNode.classList.add('noimg'); this.remove();">
               <?php endif; ?>
+              <span class="ph"><?php echo menu_placeholder_icon($category); ?></span>
             </div>
-            <span class="price">RM <?php echo number_format((float)$item['price'], 2); ?></span>
+            <div class="menu-body">
+              <div>
+                <h3><?php echo htmlspecialchars($item['menu']); ?></h3>
+                <?php if ($showDesc): ?>
+                  <p class="desc"><?php echo htmlspecialchars($desc); ?></p>
+                <?php endif; ?>
+              </div>
+              <span class="price">RM <?php echo number_format((float)$item['price'], 2); ?></span>
+            </div>
           </div>
         <?php endforeach; ?>
       </div>
@@ -181,6 +231,7 @@ foreach ($categories as $c) {
   <div class="menu-cta">
     <a href="cust_table.php">Order Now</a>
   </div>
+  <p class="photo-note">Food photos for illustration only &middot; from <a href="https://unsplash.com" target="_blank" rel="noopener">Unsplash</a></p>
 <?php endif; ?>
 </div>
 

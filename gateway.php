@@ -1,5 +1,5 @@
 <?php
-session_start();
+require_once __DIR__ . '/includes/security.php'; # safe session settings
 require __DIR__ . "/vendor/autoload.php"; #taking from vendor autoload stripe
 require_once __DIR__ . "/config.php";     #Stripe secret key ($stripe_secret_key), not in GitHub
 
@@ -10,7 +10,8 @@ require_once __DIR__ . "/config.php";     #Stripe secret key ($stripe_secret_key
 $table_no = $_POST['table_no'] ?? null;
 $total = $_POST['total'] ?? null;
 
-if ($table_no === null || $total === null) {
+$table_no = filter_var($table_no, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1, 'max_range' => 12]]);
+if ($table_no === false || $total === null) {
     echo "Invalid order details.";
     exit;
 }

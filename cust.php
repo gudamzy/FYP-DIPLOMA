@@ -1,11 +1,5 @@
 <?php
-session_start();
 $page_title = 'CUSTOMER';
-
-# The "Easy Payment" card only opens once this customer has paid for an order
-# (success.php sets $_SESSION['has_paid'] after a successful payment).
-$has_paid = !empty($_SESSION['has_paid']);
-
 include ('./includes/header_cust.html'); #header
 
 # Background photo for the big hero box at the top.
@@ -173,29 +167,6 @@ $hero_image = 'https://images.unsplash.com/photo-1544880665-abed6125538b?auto=fo
     .card.blue .emoji   { background: #e3f2fd; }
     .card.green .emoji  { background: #e8f5e9; }
     .card.orange .emoji { background: #fff3e0; }
-    .card.locked {
-        cursor: not-allowed;
-        opacity: 0.6;
-        filter: grayscale(0.4);
-    }
-    .card.locked:hover {
-        transform: none;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.08);
-    }
-    .card-tag {
-        display: inline-block;
-        margin-top: 14px;
-        font-size: 0.85rem;
-        font-weight: bold;
-        color: #888;
-        background: #eceff1;
-        padding: 6px 12px;
-        border-radius: 20px;
-    }
-    .card-tag.ok {
-        color: #2e7d32;
-        background: #e8f5e9;
-    }
     .card h3 { margin: 0 0 8px; font-size: 1.25rem; color: #2c3e50; }
     .card p  { margin: 0; line-height: 1.5; color: #666; }
 
@@ -252,21 +223,11 @@ $hero_image = 'https://images.unsplash.com/photo-1544880665-abed6125538b?auto=fo
             <h3>Order From Your Table</h3>
             <p>Pick your table number, choose your food and send your order.</p>
         </a>
-        <?php if ($has_paid): ?>
-            <a class="card orange" href="success.php">
-                <div class="emoji">💳</div>
-                <h3>Easy Payment</h3>
-                <p>Pay securely online and track your order status.</p>
-                <span class="card-tag ok">View your order →</span>
-            </a>
-        <?php else: ?>
-            <div class="card orange locked" aria-disabled="true" title="Place and pay for an order first">
-                <div class="emoji">💳</div>
-                <h3>Easy Payment</h3>
-                <p>Pay securely online and track your order status.</p>
-                <span class="card-tag">🔒 Available after payment</span>
-            </div>
-        <?php endif; ?>
+        <a class="card orange" href="success.php">
+            <div class="emoji">💳</div>
+            <h3>Easy Payment</h3>
+            <p>Pay securely online and track your order status.</p>
+        </a>
     </div>
 </div>
 

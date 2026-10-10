@@ -1,19 +1,13 @@
 <?php
-session_start();
+require_once __DIR__ . '/includes/security.php';
 
-# Check if login
-if (isset($_SESSION['user_id'])) {
-    # Destroy and clear all session 
-    session_unset();  
-
-    session_destroy(); 
-
-    # Redirect to the admin login page
-    header("Location: admin_login.php");
-    exit(); 
+# Remove everything from the session and delete the session cookie
+$_SESSION = [];
+if (ini_get('session.use_cookies')) {
+    $p = session_get_cookie_params();
+    setcookie(session_name(), '', time() - 42000, $p['path'], $p['domain'], $p['secure'], $p['httponly']);
 }
+session_destroy();
 
-# If the user is not logged in, redirect to the admin login page
-header("Location: mainpage.html");
+header("Location: admin_login.php");
 exit();
-?>

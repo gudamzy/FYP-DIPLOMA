@@ -1,4 +1,6 @@
 <?php
+require_once __DIR__ . '/includes/security.php';
+require_staff(); # login check before anything is printed
 $page_title = 'Current Order';
 include('./includes/header_employ.html');
 require_once('mysqli.php'); # dbc connection
@@ -28,10 +30,10 @@ if (mysqli_num_rows($result) > 0) {
     # Fetch and print all the records.
     while ($row = mysqli_fetch_array($result, MYSQLI_ASSOC)) {
         echo '<tr>
-                <td>' . $row['tables_no'] . '</td>
-                <td>' . $row['orders'] . '</td>
-                <td>' . $row['time'] . '</td>
-                <td>' . $row['status'] . '</td>
+                <td>' . e($row['tables_no']) . '</td>
+                <td>' . e($row['orders']) . '</td>
+                <td>' . e($row['time']) . '</td>
+                <td>' . e($row['status']) . '</td>
               </tr>';
     }
 

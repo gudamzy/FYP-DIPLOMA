@@ -1,5 +1,5 @@
 <?php
-session_start();
+require_once __DIR__ . '/includes/security.php'; # safe session settings
 require __DIR__ . '/vendor/autoload.php'; # Stripe + Dompdf (Composer)
 require_once __DIR__ . '/config.php';      # Stripe secret key ($stripe_secret_key)
 require_once __DIR__ . '/mysqli.php';      # Database connection ($dbc)

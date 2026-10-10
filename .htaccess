@@ -1,0 +1,20 @@
+# ---- Security settings (Apache / InfinityFree / XAMPP) ----
+
+# Do not list folder contents when there is no index file
+Options -Indexes
+
+# Block files that should never be opened in a browser
+<FilesMatch "(^\.|\.(sql|md|log|bak|txt|lock|json|ini)$|^config\.php$|^composer\.)">
+    Require all denied
+</FilesMatch>
+
+# Block the include files from being opened directly
+RedirectMatch 404 ^/(.*/)?includes/.*\.php$
+RedirectMatch 404 ^/(.*/)?vendor/
+
+# Extra browser protection headers
+<IfModule mod_headers.c>
+    Header always set X-Content-Type-Options "nosniff"
+    Header always set X-Frame-Options "SAMEORIGIN"
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+</IfModule>

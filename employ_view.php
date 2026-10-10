@@ -1,4 +1,6 @@
 <?php
+require_once __DIR__ . '/includes/security.php';
+require_admin(); # login check before anything is printed
 $page_title = 'EMPLOYEE LIST';
 include ('./includes/header_admin.html');
 require_once ('mysqli.php'); # dbc connection
@@ -8,7 +10,7 @@ global $dbc;
 echo "<h1>EMPLOYEE LIST</h1>\n";
 
 # Query to fetch the orders
-$query = "SELECT username, email, password, age, gender, address, phone_number FROM rms_employee";
+$query = "SELECT username, email, age, gender, address, phone_number FROM rms_employee";
 $result = mysqli_query($dbc, $query);
 
 if (mysqli_num_rows($result) > 0) {
@@ -28,13 +30,13 @@ if (mysqli_num_rows($result) > 0) {
     # Fetch and print all the records
     while ($row = mysqli_fetch_array($result, MYSQLI_ASSOC)) {
         echo '<tr>
-                <td align="left">' . $row['username'] . '</td>
-                <td align="left">' . $row['email'] . '</td>
+                <td align="left">' . e($row['username']) . '</td>
+                <td align="left">' . e($row['email']) . '</td>
                 <td align="left">Hidden</td> <!-- Password is hidden -->
-                <td align="left">' . $row['age'] . '</td>
-                <td align="left">' . $row['gender'] . '</td>
-                <td align="left">' . $row['address'] . '</td>
-                <td align="left">' . $row['phone_number'] . '</td>
+                <td align="left">' . e($row['age']) . '</td>
+                <td align="left">' . e($row['gender']) . '</td>
+                <td align="left">' . e($row['address']) . '</td>
+                <td align="left">' . e($row['phone_number']) . '</td>
               </tr>';
     }
     echo '</table>';

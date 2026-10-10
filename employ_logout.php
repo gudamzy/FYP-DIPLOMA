@@ -1,11 +1,13 @@
 <?php
-session_start();
+require_once __DIR__ . '/includes/security.php';
 
-# Destroy and clear all session variables if they exist
-session_unset();
+# Remove everything from the session and delete the session cookie
+$_SESSION = [];
+if (ini_get('session.use_cookies')) {
+    $p = session_get_cookie_params();
+    setcookie(session_name(), '', time() - 42000, $p['path'], $p['domain'], $p['secure'], $p['httponly']);
+}
 session_destroy();
 
-# Redirect to the main page
 header("Location: mainpage.html");
 exit();
-?>

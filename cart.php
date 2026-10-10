@@ -1,5 +1,5 @@
 <?php
-session_start();
+require_once __DIR__ . '/includes/security.php'; # safe session settings
 require_once 'mysqli.php';  # Database connection
 
 # Get the table number (from the link, or from the session saved earlier)
@@ -7,6 +7,12 @@ if (isset($_GET['table_no']) && $_GET['table_no'] !== '') {
     $_SESSION['table_no'] = $_GET['table_no'];
 }
 $table_no = $_SESSION['table_no'] ?? null;
+
+# Only real table numbers (1-12) are accepted
+$table_no = filter_var($table_no, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1, 'max_range' => 12]]);
+if ($table_no === false) {
+    $table_no = null;
+}
 
 if ($table_no === null) {
     echo "Table number is missing.";
@@ -19,12 +25,12 @@ if (!isset($_SESSION['cart'])) {
 
 # Quantity update code
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    $menu_id = $_POST['menu_id'] ?? null;
+    $menu_id = (int)($_POST['menu_id'] ?? 0);
 
     # Increase quantity
     if (isset($_POST['increase'])) {
         foreach ($_SESSION['cart'] as &$cart_item) {
-            if ($cart_item['menu_id'] == $menu_id) {
+            if ($cart_item['menu_id'] == $menu_id && $cart_item['quantity'] < 50) {
                 $cart_item['quantity']++;
             }
         }

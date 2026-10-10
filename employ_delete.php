@@ -1,10 +1,14 @@
-<?php 
+<?php
+require_once __DIR__ . '/includes/security.php';
+require_admin(); # only admins can delete employees
+ 
 
 $page_title = 'Delete Employee';
 include ('./includes/header_admin.html');#header
 
 # Check if the form has been submitted.
 if (isset($_POST['submit'])) {
+    csrf_check();
 
     require_once ('mysqli.php'); #dbc connection
     global $dbc;
@@ -15,16 +19,23 @@ if (isset($_POST['submit'])) {
     if (empty($_POST['id'])) {
         $errors[] = 'You forgot to select an employee.';
     } else {
-        $employee_id = $_POST['id'];
+        $employee_id = (int)$_POST['id'];
     }
 
     if (empty($errors)) { #if free error
 
         # Delete the employee from the database.
-        $query = "DELETE FROM rms_employee WHERE employee_id=$employee_id";
-        $result = @mysqli_query($dbc, $query); # Run the dbc,query.
+        $stmt = mysqli_prepare($dbc, "DELETE FROM rms_employee WHERE employee_id = ?");
+        mysqli_stmt_bind_param($stmt, 'i', $employee_id);
+        try {
+            mysqli_stmt_execute($stmt);
+            $deleted = mysqli_stmt_affected_rows($stmt);
+        } catch (mysqli_sql_exception $ex) {
+            $deleted = 0; # e.g. the record is still linked to other data
+        }
+        mysqli_stmt_close($stmt);
 
-        if (mysqli_affected_rows($dbc) > 0) { 
+        if ($deleted > 0) { 
 
             # Print a message.
             echo '<h1 id="mainhead">Employee Deleted</h1>
@@ -33,7 +44,6 @@ if (isset($_POST['submit'])) {
         } else { # If there is error
             echo '<h1 id="mainhead">System Error</h1>
                   <p class="error">The employee could not be deleted due to a system error. We apologize for any inconvenience.</p>'; // Public message.
-            echo '<p>' . mysqli_error($dbc) . '<br /><br />Query: ' . $query . '</p>'; // Debugging message.
         }
 
         mysqli_close($dbc); # Close the database connection.
@@ -50,7 +60,6 @@ if (isset($_POST['submit'])) {
 
     } 
 
-    mysqli_close($dbc); # Close the database connection.
 
 } 
 
@@ -69,12 +78,12 @@ $result = @mysqli_query($dbc, $query);# run the dbc,query
 
 if (mysqli_num_rows($result) > 0) {
     echo '<div class="form-container">
-          <form action="employ_delete.php" method="post"> 
+          <form action="employ_delete.php" method="post"> ' . csrf_field() . '
           <p>Employee: 
           <select name="id" class="input-field">';
 
     while ($row = mysqli_fetch_array($result, MYSQLI_ASSOC)) {
-        echo '<option value="' . $row['employee_id'] . '">' . $row['username'] . '</option>';
+        echo '<option value="' . (int)$row['employee_id'] . '">' . e($row['username']) . '</option>';
     }
 
     echo '</select></p>

@@ -1,10 +1,14 @@
-<?php 
+<?php
+require_once __DIR__ . '/includes/security.php';
+require_admin(); # only admins can delete menu items
+ 
 
 $page_title = 'Delete menu';
 include ('./includes/header_admin.html');
 
 # Check if the form has been submitted.
 if (isset($_POST['submit'])) {
+    csrf_check();
 
     require_once ('mysqli.php'); # dbc connection
     global $dbc;
@@ -15,16 +19,23 @@ if (isset($_POST['submit'])) {
     if (empty($_POST['id'])) {
         $errors[] = 'You forgot to select the menu.';
     } else {
-        $id = $_POST['id'];
+        $id = (int)$_POST['id'];
     }
 
     if (empty($errors)) { # no error
 
         # Delete the menu from the database.
-        $query = "DELETE FROM rms_menu WHERE id=$id";
-        $result = @mysqli_query($dbc, $query); # Run the dbc,query.
+        $stmt = mysqli_prepare($dbc, "DELETE FROM rms_menu WHERE id = ?");
+        mysqli_stmt_bind_param($stmt, 'i', $id);
+        try {
+            mysqli_stmt_execute($stmt);
+            $deleted = mysqli_stmt_affected_rows($stmt);
+        } catch (mysqli_sql_exception $ex) {
+            $deleted = 0; # e.g. the record is still linked to other data
+        }
+        mysqli_stmt_close($stmt);
 
-        if (mysqli_affected_rows($dbc) > 0) { 
+        if ($deleted > 0) { 
 
             # Print a message.
             echo '<h1 id="mainhead">Menu Deleted</h1>
@@ -33,7 +44,6 @@ if (isset($_POST['submit'])) {
         } else { # if there is error
             echo '<h1 id="mainhead">System Error</h1>
                   <p class="error">The menu could not be deleted due to a system error. We apologize for any inconvenience.</p>'; 
-            echo '<p>' . mysqli_error($dbc) . '<br /><br />Query: ' . $query . '</p>'; 
         }
 
         mysqli_close($dbc); # Close the database connection.
@@ -50,7 +60,6 @@ if (isset($_POST['submit'])) {
 
     } 
 
-    mysqli_close($dbc); # Close the database connection.
 
 } 
 
@@ -58,6 +67,7 @@ if (isset($_POST['submit'])) {
 
 <h2 class="form-header">Delete Menu</h2>
 <form action="menu_delete.php" method="post" class="form-container">
+    <?php echo csrf_field(); ?>
     <div class="form-group">
         <label for="menu">Menu:</label>
         <select name="id" id="menu" class="form-control">
@@ -70,7 +80,7 @@ if (isset($_POST['submit'])) {
 
             if (mysqli_num_rows($result) > 0) {
                 while ($row = mysqli_fetch_array($result, MYSQLI_ASSOC)) {
-                    echo '<option value="' . $row['id'] . '">' . $row['menu'] . ' - ' . $row['description'] . ' - $' . $row['price'] . '</option>';
+                    echo '<option value="' . (int)$row['id'] . '">' . e($row['menu']) . ' - ' . e($row['description']) . ' - RM' . e(number_format((float)$row['price'], 2)) . '</option>';
                 }
             } else {
                 echo '<option value="">No menu available</option>';
